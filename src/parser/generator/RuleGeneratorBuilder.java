@@ -8,7 +8,7 @@ import parser.RuleGenerator.ITermPhase2;
 public abstract class RuleGeneratorBuilder<T> {
 
 	/**
-	 * @return a lambda expression, (String rulename, String matched) -> T
+	 * @return a lambda expression, (String rulename, String matched) -> Stack -> T
 	 */
 	public abstract ITermPhase2<T> termRule();
 	/**
