@@ -3,7 +3,7 @@ package parser.utils;
 import java.util.ArrayList;
 import java.util.Stack;
 
-public class JSONWriter {
+public final class JSONWriter {
 	private ArrayList<IJSONLambda> log = new ArrayList<IJSONLambda>();
 	private StringBuffer output = new StringBuffer();
 	private String indent = "";
