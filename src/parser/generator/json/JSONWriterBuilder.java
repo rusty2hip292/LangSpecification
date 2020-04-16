@@ -1,4 +1,4 @@
-package parser.generator;
+package parser.generator.json;
 
 import java.util.Stack;
 
@@ -8,10 +8,11 @@ import parser.RuleGenerator.ICollapser;
 import parser.RuleGenerator.IList;
 import parser.RuleGenerator.IRulePhase;
 import parser.RuleGenerator.ITermPhase2;
+import parser.generator.RuleGeneratorBuilder;
 import parser.utils.JSONWriter;
 import parser.utils.Utils;
 
-public class JSONWriterBuilder extends RuleGeneratorBuilder<parser.generator.IWriteJSONLambda> {
+public class JSONWriterBuilder extends RuleGeneratorBuilder<parser.generator.json.IWriteJSONLambda> {
 
 	public ITermPhase2<IWriteJSONLambda> termRule() {
 		return (String name, String matched) -> {

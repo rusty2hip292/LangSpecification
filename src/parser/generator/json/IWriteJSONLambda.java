@@ -1,4 +1,4 @@
-package parser.generator;
+package parser.generator.json;
 
 import java.util.Stack;
 import parser.utils.JSONWriter;

@@ -1,6 +1,7 @@
 package parser;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import parser.istreamer.IStreamer;
 import parser.utils.Utils;
@@ -27,12 +28,6 @@ public abstract class ParserState<T> {
 	}
 
 	protected abstract LinkedList<LinkedList<ParserState<T>>> getCompiledOptions();
-	protected Iterable<LinkedList<ParserState<T>>> compiled() {
-		LinkedList<LinkedList<ParserState<T>>> list = this.getCompiledOptions();
-		return () -> {
-			return list.iterator();
-		};
-	}
 	protected abstract Iterable<LinkedList<ParserState<T>>> iterator();
 	
 }
@@ -54,7 +49,10 @@ class TerminalState<T> extends ParserState<T> {
 	}
 	
 	protected Iterable<LinkedList<ParserState<T>>> iterator() {
-		return this.compiled();
+		Iterator<LinkedList<ParserState<T>>> itr = this.getCompiledOptions().iterator();
+		return () -> {
+			return itr;
+		};
 	}
 }
 
@@ -85,10 +83,20 @@ class RuleState<T> extends ParserState<T> {
 	}
 
 	protected LinkedList<LinkedList<ParserState<T>>> getCompiledOptions() {
-		return this.removeDirectLeftRecursion(this.removeIndirectLeftRecursion());
+		LinkedList<LinkedList<ParserState<T>>> results = this.options;
+		//System.out.println(results);
+		results = this.removeIndirectLeftRecursion();
+		//System.out.println(results);
+		results = this.removeDirectLeftRecursion(results);
+		//System.out.println(results);
+		return results;
 	}
 
+	private LinkedList<LinkedList<ParserState<T>>> compiled = null;
 	protected LinkedList<LinkedList<ParserState<T>>> removeIndirectLeftRecursion() {
+		if(this.compiled != null) {
+			return this.compiled;
+		}
 		LinkedList<LinkedList<ParserState<T>>> temp = this.options;
 		for(int i = 0; i < temp.size(); i++) {
 			while(true) {
@@ -102,12 +110,17 @@ class RuleState<T> extends ParserState<T> {
 						break;
 					}
 					RuleState<T> ntps = (RuleState<T>) first;
-					temp = Utils.insert(temp, i, 0, ntps.options);
+					temp = Utils.insert(temp, i, 0, ntps.getCompiledOptions());
+					//System.out.println(i);
+					//System.out.println(String.format("%s|%s", this, first));
+					//System.out.println(temp);
+					//Utils.delay(1000);
 				}else {
 					throw new IllegalArgumentException("Failed to account for class type " + first.getClass().toString());
 				}
 			}
 		}
+		this.compiled = temp;
 		return temp;
 	}
 
@@ -119,11 +132,14 @@ class RuleState<T> extends ParserState<T> {
 		for(int i = recursive.size() - 1; i >= 0; i--) {
 			recursive = Utils.insert(recursive, i, 0, base);
 		}
-		return recursive;
+		for(LinkedList<ParserState<T>> r : recursive) {
+			base.add(r);
+		}
+		return base;
 	}
 	
 	protected Iterable<LinkedList<ParserState<T>>> iterator() {
-		LinkedList<LinkedList<ParserState<T>>> list = this.options;
+		LinkedList<LinkedList<ParserState<T>>> list = this.getCompiledOptions();
 		return () -> {
 			return list.iterator();
 		};

@@ -11,10 +11,83 @@ import parser.istreamer.IStreamer;
 import parser.utils.Utils;
 
 abstract class ParseTree<T> {
-	
+
 	private static int count = 0;
 	protected final int id = count++;
-	
+
+	protected static class ParseState<T> {
+		public final IStreamer stream;
+		private final Stack<Stack<ParseTree<T>>> parse;
+		private final Stack<RuleGenerator.ITBuilder<T>> accepted;
+		private final Stack<Integer> acceptedCount = new Stack<Integer>();
+		protected ParseState(IStreamer stream) {
+			this.stream = stream;
+			this.parse = new Stack<Stack<ParseTree<T>>>();
+			this.accepted = new Stack<RuleGenerator.ITBuilder<T>>();
+		}
+		public Stack<RuleGenerator.ITBuilder<T>> parse(ParseTree<T> entry) {
+			Stack<ParseTree<T>> init = new Stack<ParseTree<T>>();
+			init.push(entry);
+			this.parse.push(init);
+			return this.parse();
+		}
+		private Stack<RuleGenerator.ITBuilder<T>> parse() {
+			while(this.parse.size() > 0) {
+				try {
+					Stack<ParseTree<T>> top = this.parse.peek();
+					if(top.isEmpty() && this.stream.hasNext()) {
+						this.fail();
+					}else if(top.isEmpty()) {
+						return this.results();
+					}else {
+						top.pop().parse(this);
+					}
+				}catch(Exception e) {
+					e.printStackTrace();
+					this.fail();
+				}
+			}
+			return null;
+		}
+		protected Stack<RuleGenerator.ITBuilder<T>> results() {
+			if(stream.hasNext()) {
+				return null;
+			}
+			return accepted;
+		}
+		protected void branch(ParseTree<T> fail, ParseTree<T> next) {
+			if(fail == null) {
+				if(next != null) {
+					this.parse.peek().push(next);
+				}
+			}else  {
+				this.stream.setFailPoint();
+				acceptedCount.push(this.accepted.size());
+				Stack<ParseTree<T>> fail_state = this.parse.peek();
+				Stack<ParseTree<T>> next_state = (Stack<ParseTree<T>>) fail_state.clone();
+				fail_state.push(fail);
+				if(next != null) {
+					next_state.push(next);
+				}
+				this.parse.push(next_state);
+			}
+		}
+		protected void fail() {
+			if(parse.isEmpty()) {
+				return;
+			}
+			parse.pop();
+			int count = acceptedCount.isEmpty() ? 0 : acceptedCount.pop();
+			while(accepted.size() > count) {
+				accepted.pop();
+			}
+			this.stream.fail();
+		}
+		protected void accept(RuleGenerator.ITBuilder<T> t) {
+			this.accepted.push(t);
+		}
+	}
+
 	protected static <T> ParseTree<T> get(ParserState<T> ps, HashMap<ParserState<T>, ParseTree<T>> visited) {
 		ParseTree<T> tree = visited.get(ps);
 		if(tree != null) {
@@ -39,17 +112,14 @@ abstract class ParseTree<T> {
 		HashMap<ParserState<T>, ParseTree<T>> map = new HashMap<ParserState<T>, ParseTree<T>>();
 		SubParseTree<T> tree = new SubParseTree<T>();
 		map.put(ps, tree);
-		tree.make(ps.compiled(), map);
+		tree.make(ps.iterator(), map);
 		return tree;
 	}
-	public Stack<RuleGenerator.ITBuilder<T>> parse(IStreamer stream) {
-		Stack<RuleGenerator.ITBuilder<T>> stack = new Stack<RuleGenerator.ITBuilder<T>>();
-		if(this.parse(stream, stack)) {
-			return stack;
-		}
-		return null;
+	public final Stack<RuleGenerator.ITBuilder<T>> parse(IStreamer stream) {
+		ParseState<T> state = new ParseState<T>(stream);
+		return state.parse(this);
 	}
-	protected abstract boolean parse(IStreamer stream, Stack<RuleGenerator.ITBuilder<T>> ast);
+	protected abstract void parse(ParseState<T> state);
 	protected ParseTree<T> simplify() {
 		return simplify(new HashSet<ParseTree<T>>());
 	}
@@ -57,9 +127,9 @@ abstract class ParseTree<T> {
 	protected static <T> ParseTree<T> simplify(ParseTree<T> tree, HashSet<ParseTree<T>> visited) {
 		return tree == null ? null : (visited.add(tree) ? tree.simplify(visited) : tree);
 	}
-	
+
 	public String toString() {
-		return this.id + " : " + treeString(new HashSet<Integer>());
+		return "" + this.id;
 	}
 	protected abstract String treeString(HashSet<Integer> visited);
 }
@@ -68,19 +138,19 @@ class TerminalParseTree<T> extends ParseTree<T> {
 	protected void make(TerminalState<T> t, HashMap<ParserState<T>, ParseTree<T>> visited) {
 		lambda = t.accepting;
 	}
-	protected boolean parse(IStreamer stream, Stack<RuleGenerator.ITBuilder<T>> stack) {
-		RuleGenerator.ITBuilder<T> t = lambda.accept(stream);
-		if(t != null) {
-			stack.push(t);
-			return true;
+	protected void parse(ParseState<T> state) {
+		RuleGenerator.ITBuilder<T> t = lambda.accept(state.stream);
+		if(t == null) {
+			state.fail();
+			return;
 		}
-		return false;
+		state.accept(t);
 	}
 	protected ParseTree<T> simplify(HashSet<ParseTree<T>> visited) {
 		visited.add(this);
 		return this;
 	}
-	
+
 	protected String treeString(HashSet<Integer> visited) {
 		visited.add(this.id);
 		return "[" + this.id + "]";
@@ -88,9 +158,6 @@ class TerminalParseTree<T> extends ParseTree<T> {
 }
 class SubParseTree<T> extends ParseTree<T> {
 	protected ParseTree<T> simplify(HashSet<ParseTree<T>> visited) {
-		//if(true) {
-		//	return this;
-		//}
 		this.me = ParseTree.simplify(this.me, visited);
 		this.next = ParseTree.simplify(this.next, visited);
 		this.fail = ParseTree.simplify(this.fail, visited);
@@ -150,22 +217,9 @@ class SubParseTree<T> extends ParseTree<T> {
 		tree.next = list(itr, visited);
 		return tree;
 	}
-	protected boolean parse(IStreamer stream, Stack<RuleGenerator.ITBuilder<T>> stack) {
-		int size = stack.size();
-		if(fail != null) {
-			stream.setFailPoint();
-		}
-		if(me.parse(stream, stack)) {
-			return (next == null) ? true : next.parse(stream, stack);
-		}
-		if(fail != null) {
-			stream.fail();
-			while(stack.size() > size) {
-				stack.pop();
-			}
-			return fail.parse(stream, stack);
-		}
-		return false;
+	protected void parse(ParseState<T> state) {
+		state.branch(this.fail, this.next);
+		state.branch(null, this.me);
 	}
 	protected String treeString(HashSet<Integer> visited) {
 		if(visited.add(this.id)) {

@@ -1,14 +1,18 @@
 package parser;
 
+import java.io.Serializable;
 import java.util.Stack;
 
-import parser.generator.IWriteJSONLambda;
+import parser.generator.json.IWriteJSONLambda;
 import parser.istreamer.IStreamer;
 import parser.istreamer.Streamer;
 import parser.utils.JSONWriter;
+import parser.utils.Utils;
 
-public final class Parser<T> {
+public final class Parser<T> implements Serializable {
 
+	public static final long serialVersionUID = 0;
+	
 	private final ParseTree<T> tree;
 	private Parser(ParserState<T> ps) {
 		this.tree = ParseTree.tree(ps).simplify();
@@ -36,25 +40,32 @@ public final class Parser<T> {
 	}
 
 	public static void main(String[] args) {
-		parser.RuleGenerator<IWriteJSONLambda> gen = new parser.RuleGenerator<>(new parser.generator.JSONWriterBuilder());
+		var t1 = Utils.timer();
+		parser.RuleGenerator<IWriteJSONLambda> gen = new parser.RuleGenerator<>(new parser.generator.json.JSONWriterBuilder());
 		ParserState<IWriteJSONLambda> p = gen.string("+", "+"), m = gen.string("*", "*"), t = gen.string("term", "7");
 		RuleState<IWriteJSONLambda> exp = gen.rule("exp"), add = gen.rule("add"), mult = gen.rule("mult");
 		gen.add(exp, add);
-		gen.add(exp, t);
-		gen.add(mult, exp, m, exp);
-		gen.add(mult, exp);
+		gen.add(add, add, p, add);
 		gen.add(add, mult, p, mult);
 		gen.add(add, mult);
-		//System.out.println(exp.removeIndirectLeftRecursion());
-		//System.out.println(exp.getCompiledOptions());
+		gen.add(mult, mult, m, mult);
+		gen.add(mult, t, m, t);
+		gen.add(mult, t);
+		long first = t1.time();
+		var t2 = Utils.timer();
 		Parser<IWriteJSONLambda> compiled = Parser.compile(exp);
-		IStreamer stream = new Streamer("7+7*7*7*7+7*7");
+		IStreamer stream = new Streamer("7+7*7+7+7+7+7+7+7*7*7*7+7*7+7+7*7*7+7");
 		JSONWriter json = new JSONWriter();
+		long second = t2.time();
+		var t3 = Utils.timer();
 		try {
 			compiled.parse(stream).write(json);
-			System.out.println(json);
 		}catch(Exception e) {
 			json.debug();
 		}
+		long third = t3.time();
+		System.out.println(json);
+		System.out.println(stream);
+		System.out.println(String.format("%s %s %s", first, second, third));
 	}
 }
