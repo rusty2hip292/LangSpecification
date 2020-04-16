@@ -27,11 +27,12 @@ public final class Parser<T> {
 			Stack<RuleGenerator.ITBuilder<T>> result = tree.parse(stream);
 			T t = result.pop().build(result);
 			if(result.size() == 0) {
-				return null;
+				return t;
 			}
 		}catch(Exception e) {
-			return null;
+			e.printStackTrace();
 		}
+		return null;
 	}
 
 	public static void main(String[] args) {
@@ -48,11 +49,9 @@ public final class Parser<T> {
 		//System.out.println(exp.getCompiledOptions());
 		Parser<IWriteJSONLambda> compiled = Parser.compile(exp);
 		IStreamer stream = new Streamer("7+7*7*7*7+7*7");
-		Stack<IWriteJSONLambda> stack = compiled.parse(stream);
 		JSONWriter json = new JSONWriter();
 		try {
-			stack.pop().write(json, stack);
-			System.out.println(stack);
+			compiled.parse(stream).write(json);
 			System.out.println(json);
 		}catch(Exception e) {
 			json.debug();

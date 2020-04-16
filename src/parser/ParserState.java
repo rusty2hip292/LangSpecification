@@ -8,10 +8,10 @@ import parser.utils.Utils;
 public abstract class ParserState<T> {
 	
 	interface ITerminalLambda<T> {
-		T accept(IStreamer stream);
+		RuleGenerator.ITBuilder<T> accept(IStreamer stream);
 	}
 	
-	protected static <T> ITerminalLambda<T> toTerminalLambda(T t) {
+	protected static <T> ITerminalLambda<T> toTerminalLambda(RuleGenerator.ITBuilder<T> t) {
 		return (IStreamer stream) -> {
 			return t;
 		};
@@ -75,7 +75,7 @@ class RuleState<T> extends ParserState<T> {
 		return str + "_" + i;
 	}
 
-	public void addRule(T endState, ParserState<T>... option) {
+	public void addRule(RuleGenerator.ITBuilder<T> endState, ParserState<T>... option) {
 		LinkedList<ParserState<T>> o = new LinkedList<ParserState<T>>();
 		for(ParserState<T> ps : option) {
 			o.add(ps);

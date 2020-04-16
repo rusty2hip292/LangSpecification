@@ -43,7 +43,7 @@ abstract class ParseTree<T> {
 		return tree;
 	}
 	public Stack<RuleGenerator.ITBuilder<T>> parse(IStreamer stream) {
-		Stack<T> stack = new Stack<T>();
+		Stack<RuleGenerator.ITBuilder<T>> stack = new Stack<RuleGenerator.ITBuilder<T>>();
 		if(this.parse(stream, stack)) {
 			return stack;
 		}
@@ -69,7 +69,7 @@ class TerminalParseTree<T> extends ParseTree<T> {
 		lambda = t.accepting;
 	}
 	protected boolean parse(IStreamer stream, Stack<RuleGenerator.ITBuilder<T>> stack) {
-		T t = lambda.accept(stream);
+		RuleGenerator.ITBuilder<T> t = lambda.accept(stream);
 		if(t != null) {
 			stack.push(t);
 			return true;
@@ -88,9 +88,9 @@ class TerminalParseTree<T> extends ParseTree<T> {
 }
 class SubParseTree<T> extends ParseTree<T> {
 	protected ParseTree<T> simplify(HashSet<ParseTree<T>> visited) {
-		if(true) {
-			return this;
-		}
+		//if(true) {
+		//	return this;
+		//}
 		this.me = ParseTree.simplify(this.me, visited);
 		this.next = ParseTree.simplify(this.next, visited);
 		this.fail = ParseTree.simplify(this.fail, visited);

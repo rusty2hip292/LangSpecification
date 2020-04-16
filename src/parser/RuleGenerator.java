@@ -10,10 +10,10 @@ import parser.istreamer.IStreamer;
 public class RuleGenerator<T> {
 
 	public interface ITBuilder<T> {
-		T build(Stack<T> stack);
+		T build(Stack<ITBuilder<T>> stack);
 	}
 	public static <T> ITBuilder<T> wrap(T t) {
-		return (Stack<T> stack) -> {
+		return t == null ? null : (Stack<ITBuilder<T>> stack) -> {
 			return t;
 		};
 	}
@@ -22,14 +22,14 @@ public class RuleGenerator<T> {
 	 * a lambda expression, (ParserState<T> listed_rule) -> T
 	 */
 	public static interface IList<T> {
-		T list(ParserState<T> listed);
+		RuleGenerator.ITBuilder<T> list(ParserState<T> listed);
 	}
 	/**
 	 * a lambda expression, (int num) -> T
 	 * should merge the last num T states into a single state on the parse stack
 	 */
 	public static interface ICollapser<T> {
-		T collapse(int num_to_collapse);
+		RuleGenerator.ITBuilder<T> collapse(int num_to_collapse);
 	}
 
 	public ParserState<T> zeroMany(ParserState<T> state) {
@@ -51,7 +51,7 @@ public class RuleGenerator<T> {
 	}
 	private ParserState<T> list(ParserState<T> state, boolean require1, boolean many) {
 		RuleState<T> inside_arr = this.rule(state.toString() + (require1 ? "+" : "*") + (many ? "" : "?"));
-		T collapse0 = this.collapser.collapse(0), collapse2 = this.collapser.collapse(2);
+		RuleGenerator.ITBuilder<T> collapse0 = this.collapser.collapse(0), collapse2 = this.collapser.collapse(2);
 		if(require1) {
 			inside_arr.addRule(collapse2, state, list(state, false, many));
 			return inside_arr;
@@ -126,12 +126,12 @@ public class RuleGenerator<T> {
 	 * a lambda expression, (String rulename, ParserState<T>... options) -> T
 	 */
 	public static interface IRulePhase<T> {
-		T action(String name, ParserState<T>... option);
+		ITBuilder<T> action(String name, ParserState<T>... option);
 	}
 	private static <T> ITermPhase3<T> compile_term(ITermPhase1 p1, ITermPhase2<T> p2) {
 		return (String name) -> {
 			return (IStreamer stream) -> {
-				return p2.action(name, p1.read(name).read(stream));
+				return RuleGenerator.wrap(p2.action(name, p1.read(name).read(stream)));
 			};
 		};
 	}
