@@ -107,4 +107,16 @@ public class Utils {
 			return System.currentTimeMillis() - start;
 		};
 	}
+	
+	public static <T> void copyin(Object[] initial, T[] type) {
+		if(type.length < initial.length) {
+			throw new IllegalArgumentException("Array sizes are not the same.");
+		}
+		for(int i = 0; i < initial.length; i++) {
+			type[i] = (T) initial[i];
+		}
+		for(int i = initial.length; i < type.length; i++) {
+			type[i] = null;
+		}
+	}
 }

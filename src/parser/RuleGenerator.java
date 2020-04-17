@@ -1,11 +1,14 @@
 package parser;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Stack;
 
 import parser.ParserState.ITerminalLambda;
 import parser.TerminalState.IReadStringFromStream;
 import parser.generator.RuleGeneratorBuilder;
 import parser.istreamer.IStreamer;
+import parser.utils.Tuple;
 
 public class RuleGenerator<T> {
 
@@ -17,7 +20,7 @@ public class RuleGenerator<T> {
 			return t;
 		};
 	}
-	
+
 	/**
 	 * a lambda expression, (ParserState<T> listed_rule) -> T
 	 */
@@ -65,7 +68,30 @@ public class RuleGenerator<T> {
 		}
 		return inside_arr;
 	}
-	
+	public ParserState<T> wanted(ParserState<T> state) {
+		return makeOptional(state, true);
+	}
+	public ParserState<T> unwanted(ParserState<T> state) {
+		return makeOptional(state, false);
+	}
+	private ParserState<T> makeOptional(ParserState<T> state, boolean wanted) {
+		RuleState<T> opt = this.rule(state.toString() + "?" + (wanted ? "" : ""));
+		opt.addRule(this.array.list(state), optional(state, wanted));
+		return opt;
+	}
+	private ParserState<T> optional(ParserState<T> state, boolean wanted) {
+		RuleState<T> opt = this.rule("[" + state.toString() + "]");
+		RuleGenerator.ITBuilder<T> collapse0 = this.collapser.collapse(0), collapse1 = this.collapser.collapse(1);
+		if(wanted) {
+			opt.addRule(collapse1, state);
+			opt.addRule(collapse0);
+		}else {
+			opt.addRule(collapse0);
+			opt.addRule(collapse1, state);
+		}
+		return opt;
+	}
+
 	public static final ITermPhase1 matchExactString(String str) {
 		return (String name) -> {
 			return (IStreamer stream) -> {
@@ -76,11 +102,71 @@ public class RuleGenerator<T> {
 			};
 		};
 	}
+	public static final ITermPhase1 matchCharSet(boolean match, String acceptedchars) {
+		char[] chars = acceptedchars.toCharArray();
+		Arrays.sort(chars);
+		if(chars.length == 0) {
+			return matchCharSet(match);
+		}
+		ArrayList<Tuple<Character, Character>> ranges = new ArrayList<Tuple<Character, Character>>();
+		char min = chars[0];
+		char last = min;
+		for(char c : chars) {
+			if(c - last <= 1) {
+				last = c;
+				continue;
+			}
+			ranges.add(new Tuple<Character, Character>(min, last));
+			min = c;
+			last = min;
+		}
+		ranges.add(new Tuple<Character, Character>(min, last));
+		Tuple<Character, Character>[] rs = new Tuple[ranges.size()];
+		rs = ranges.toArray(rs);
+		return matchCharSet(true, rs);
+	}
+	public static final ITermPhase1 matchCharSet(boolean match, Tuple<Character, Character>... ranges) {
+		char[] starts = new char[ranges.length], ends = new char[ranges.length];
+		for(int i = 0; i < starts.length; i++) {
+			Tuple<Character, Character> range = ranges[i];
+			if(range.left < range.right) {
+				starts[i] = range.left;
+				ends[i] = range.right;
+			}else {
+				starts[i] = range.right;
+				ends[i] = range.left;
+			}
+		}
+		return (String name) -> {
+			return (IStreamer stream) -> {
+				char c = ' ';
+				if(stream.hasNext()) {
+					c = stream.next();
+					for(int i = 0; i < starts.length; i++) {
+						System.out.println(String.format("%s %s %s", starts[i], c, ends[i]));
+						if(c >= starts[i] && c <= ends[i]) {
+							return match ? "" + c : null;
+						}
+					}
+				}else {
+					return null;
+				}
+				return match ? null : "" + c;
+			};
+		};
+	}
 
 	public ParserState<T> string(String name, String str) {
 		return terminal(name, matchExactString(str));
 	}
-	private ParserState<T> terminal(String name, ITermPhase1 t1) {
+	public ParserState<T> charSet(String name, String str) {
+		return terminal(name, matchCharSet(true, str));
+	}
+	public ParserState<T> notCharSet(String name, String str) {
+		return terminal(name, matchCharSet(false, str));
+	}
+
+	public final ParserState<T> terminal(String name, ITermPhase1 t1) {
 		return new TerminalState<T>(name, compile_term(t1, this.term).name(name));
 	}
 	public RuleState<T> rule(String name) {

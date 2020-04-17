@@ -1,20 +1,22 @@
 package parser.generator.loader;
 
-import java.util.HashMap;
-
-import parser.istreamer.IStreamer;
-
-public abstract class LanguageObject<T extends ILanguageObject> {
-
-	public final LanguageObject<T> make(IStreamer stream) {
-		return null;
-	}
-}
-
-interface ILanguageObject {
+public abstract class LanguageObject<T extends ILanguageObject> implements ILanguageObject {
 	
+	
+	
+	public static void main(String[] args) {
+		Object[] arr = new String[]{"A"};
+		Class<?> c = arr.getClass();
+		arr = (Object[]) arr;
+	}
+	public abstract String getText();
 }
 
-interface IVoidLambda {
-	void make();
+interface ILanguageObject { }
+
+interface IMakeLanguageObject {
+	/**
+	 * @return a LanguageObject or a LanguageObject[], 
+	 */
+	Object make();
 }

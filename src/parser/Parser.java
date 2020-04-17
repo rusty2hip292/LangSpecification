@@ -42,7 +42,7 @@ public final class Parser<T> implements Serializable {
 	public static void main(String[] args) {
 		var t1 = Utils.timer();
 		parser.RuleGenerator<IWriteJSONLambda> gen = new parser.RuleGenerator<>(new parser.generator.json.JSONWriterBuilder());
-		ParserState<IWriteJSONLambda> p = gen.string("+", "+"), m = gen.string("*", "*"), t = gen.string("term", "7");
+		ParserState<IWriteJSONLambda> p = gen.string("+", "+"), m = gen.string("*", "*"), t = gen.oneMany(gen.charSet("term", "0123456789"));
 		RuleState<IWriteJSONLambda> exp = gen.rule("exp"), add = gen.rule("add"), mult = gen.rule("mult");
 		gen.add(exp, add);
 		gen.add(add, add, p, add);
@@ -54,7 +54,7 @@ public final class Parser<T> implements Serializable {
 		long first = t1.time();
 		var t2 = Utils.timer();
 		Parser<IWriteJSONLambda> compiled = Parser.compile(exp);
-		IStreamer stream = new Streamer("7+7*7+7+7+7+7+7+7*7*7*7+7*7+7+7*7*7+7");
+		IStreamer stream = new Streamer("1+2*3*4+5+678*91011");
 		JSONWriter json = new JSONWriter();
 		long second = t2.time();
 		var t3 = Utils.timer();
