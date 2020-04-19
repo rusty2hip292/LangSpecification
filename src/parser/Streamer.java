@@ -1,6 +1,8 @@
-package parser.istreamer;
+package parser;
 
 import java.util.Stack;
+
+import istreamer.IStreamer;
 
 public class Streamer implements IStreamer {
 
