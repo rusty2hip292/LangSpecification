@@ -1,0 +1,42 @@
+make iterable/. iterator/. list/. unit_test/. utils/. COMMAND=build
+make[1]: Entering directory '/cygdrive/c/Users/arikr/LangSpec'
+echo build
+build
+cp Makefile iterable/./Makefile
+running make -C iterable/. build BUILD_DIR?=.././.build BUILD_MODE?= PACKAGE_NAME=root.iterable in root
+make -C iterable/. build BUILD_DIR?=.././.build BUILD_MODE?= PACKAGE_NAME=root.iterable
+make[2]: Entering directory '/cygdrive/c/Users/arikr/LangSpec/iterable'
+echo here
+here
+make[2]: Leaving directory '/cygdrive/c/Users/arikr/LangSpec/iterable'
+echo build
+build
+cp Makefile iterator/./Makefile
+running make -C iterator/. build BUILD_DIR?=.././.build BUILD_MODE?= PACKAGE_NAME=root.iterator in root
+make -C iterator/. build BUILD_DIR?=.././.build BUILD_MODE?= PACKAGE_NAME=root.iterator
+make[2]: Entering directory '/cygdrive/c/Users/arikr/LangSpec/iterator'
+echo here
+here
+make[2]: Leaving directory '/cygdrive/c/Users/arikr/LangSpec/iterator'
+echo build
+build
+cp Makefile list/./Makefile
+running make -C list/. build BUILD_DIR?=.././.build BUILD_MODE?= PACKAGE_NAME=root.list in root
+make -C list/. build BUILD_DIR?=.././.build BUILD_MODE?= PACKAGE_NAME=root.list
+make[2]: Entering directory '/cygdrive/c/Users/arikr/LangSpec/list'
+echo here
+here
+make[2]: Leaving directory '/cygdrive/c/Users/arikr/LangSpec/list'
+echo build
+build
+cp Makefile unit_test/./Makefile
+running make -C unit_test/. build BUILD_DIR?=.././.build BUILD_MODE?= PACKAGE_NAME=root.unit_test in root
+make -C unit_test/. build BUILD_DIR?=.././.build BUILD_MODE?= PACKAGE_NAME=root.unit_test
+make[2]: Entering directory '/cygdrive/c/Users/arikr/LangSpec/unit_test'
+echo here
+here
+make[2]: Leaving directory '/cygdrive/c/Users/arikr/LangSpec/unit_test'
+echo build
+build
+cp Makefile utils/./Makefile
+running make -C utils/. build BUILD_DIR?=.././.build BUILD_MODE?= PACKAGE_NAME=root.utils in root

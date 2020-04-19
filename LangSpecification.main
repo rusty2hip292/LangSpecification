@@ -1,0 +1,12 @@
+
+#include <iostream>
+#include "utils/linkedlist/LinkedList.h"
+
+int main(int argc, char **argv) {
+	LinkedList<int> *a = new LinkedList<int>();
+	a->add(6);
+	std::cout << a->size() << std::endl;
+	std::cout << "Hello, world!" << std::endl;
+	delete a;
+	return 0;
+}
