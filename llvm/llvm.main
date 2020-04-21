@@ -1,0 +1,7 @@
+
+#include "llvm/llvm.h"
+
+int main(int num, char **args) {
+
+	return 0;
+}
