@@ -118,26 +118,30 @@ public abstract class ParseState {
 			return no_indirect;
 		}
 		private LinkedList<LinkedList<ParseState>> removeDirectRecursion(LinkedList<LinkedList<ParseState>> no_indirect) {
+			NonTerminalParseState base = new NonTerminalParseState("b_" + this.name);
+			NonTerminalParseState after_base = new NonTerminalParseState("+" + this.name);
+			NonTerminalParseState repeat = new NonTerminalParseState("r_" + this.name);
+			repeat.newRule(); repeat.add(after_base); repeat.add(repeat); repeat.newRule();
 			LinkedList<LinkedList<ParseState>> no_direct = new LinkedList<LinkedList<ParseState>>();
-			NonTerminalParseState base = new NonTerminalParseState("b_" + this.name), recursive = new NonTerminalParseState("r_" + this.name), zmany_recursive = new NonTerminalParseState("rec_" + this.name);
-			zmany_recursive.newRule(); zmany_recursive.add(recursive); zmany_recursive.add(zmany_recursive); zmany_recursive.newRule();
 			for(LinkedList<ParseState> list : no_indirect) {
-				if(!list.isEmpty() && list.getFirst() == this) {
-					LinkedList<ParseState> cleaned = new LinkedList<ParseState>();
-					cleaned.add(base); cleaned.add(zmany_recursive);
-					recursive.newRule();
-					for(int i = 1; i < list.size(); i++) {
-						ParseState ps = list.get(i);
-						cleaned.add(ps);
-						recursive.add(ps);
-					}
-					no_direct.add(cleaned);
-				}else {
+				if(list.isEmpty() || list.getFirst() != this) {
 					base.states.add(list);
 					no_direct.add(list);
+				}else if(list.size() > 1) {
+					after_base.newRule();
+					LinkedList<ParseState> temp = new LinkedList<ParseState>();
+					temp.add(base); temp.add(repeat);
+					for(var v : list.subList(1, list.size())) {
+						after_base.add(v);
+						temp.add(v);
+					}
+					no_direct.add(temp);
 				}
 			}
 			System.out.println(no_direct);
+			System.out.println(repeat.states);
+			System.out.println(after_base.states);
+			System.out.println(base.states);
 			return no_direct;
 		}
 		

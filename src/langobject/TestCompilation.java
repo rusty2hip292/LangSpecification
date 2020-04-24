@@ -10,6 +10,7 @@ public class TestCompilation {
 
 	public static void main(String[] args) {
 		parser.Parser<AddExpression> p = parser.Parser.parser(new AddExpression());
+		System.out.println(p);
 		for(String s : new String[] {"77", "77", "5*5", "55*56", "5+5", "6*6", "69+420*69*69*420+69+420", "7+777*7*7*7+7*77"}) {
 			System.out.println(p.parse(s));
 		}
