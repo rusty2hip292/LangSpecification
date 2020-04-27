@@ -1,4 +1,0 @@
-
-// test.js
-
-alert("testing");
