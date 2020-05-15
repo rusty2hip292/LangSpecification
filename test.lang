@@ -1,0 +1,46 @@
+
+virtual class LangObject {
+
+	virtual static LangObjectBuilder<? extends this>[] register()
+
+}
+
+type LangObjectBuilder<L extends LangObject> Transform<<<S...>>Stack, <S... L>Stack>
+
+class <type...>Stack {
+	
+	var internal = Object[]
+	
+	<>Stack()
+	
+	void <<Ts...>>push<Ts T>(<T> t) {
+		internal.push(t)
+	}
+	T <<Ts... T>>pop<Ts>() {
+		return (T) internal.pop()
+	}
+}
+
+interface Transform<type..., type...> {
+
+	virtual Bs transform(As as)
+	
+	template merge(A..., B) merge(merge(A...), B)
+	
+	static Transform<_As, _Cs> merge(Transform<<_As..., _Bs...>> t1, Transform<_Bs..., <_Cs...>> t2) {
+		return {
+			_Cs transform(_As as) {
+				return t2.transform(t1.transform(as))
+			}
+		}
+	}
+}
+
+// t can be converted into an interface or an anonymous class because it is not a real type
+var t = {
+	<T... String>Stack transform(<<T...> String String>Stack stack) {
+		String s = stack.pop()
+		stack.push(stack.pop() + s)
+		return stack
+	}
+}

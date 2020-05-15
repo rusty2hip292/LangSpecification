@@ -1,0 +1,16 @@
+
+primative int8 int16 int32 int64
+primative uint8 uint16 uint32 uint64
+primative float double
+
+type (int int32) (uint uint32) (char uint8) (byte uint8) (long int64) (ulong uint64)
+
+prefix ~
+prefix ++ --
+postfix ++ --
+infix & | ^
+infix + -
+infix * /
+infix **
+infix && ||
+infix = += -= *= /= ||= &&= |= &= ^= **=
