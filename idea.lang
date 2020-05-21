@@ -1,0 +1,80 @@
+
+type None()
+type Stack() = Stack(None())
+type Stack(b) = Stack(Stack(), b)
+type Stack(a : Stack, b) {			// has higher priority over Stack(a..., b) definition because textually higher
+	
+	pop() {
+		this = a
+		return b
+	}
+	push(b) {
+		this = Stack(this, b)
+		return this
+	}
+}
+type Stack(a..., b) = Stack(Stack(a...), b)
+
+var x = Stack(6, 7, 8, 9).push(10)
+x.push(11).push(12)
+x.push(13)	// x is 6 7 8 9 10 11 12 13
+
+type List() {
+
+	size() {
+		return 0
+	}
+	append(a) {
+		this = List(a)
+		return this
+	}
+	prepend(a) = append(a)
+}
+type List(a) {
+
+	size() {
+		return 1
+	}
+	append(e) {
+		return List(a, e)
+	}
+	prepend(e) {
+		return List(e, this)
+	}
+	first() {
+		return a
+	}
+	tail() {
+		return List()
+	}
+	last() {
+		return a
+	}
+}
+type List(a, b...) {
+
+	size() {
+		return 1 + b.size()
+	}
+	append(e) {
+		this = List(a, b..., e)
+		return this
+	}
+	prepend(e) {
+		this = List(e, a, b...)
+		return this
+	}
+	first() {
+		return a
+	}
+	tail() {
+		return List(b...)
+	}
+	last() {
+		return List(b...).last()
+	}
+}
+
+type Queue {
+	
+}

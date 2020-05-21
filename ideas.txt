@@ -1,0 +1,25 @@
+
+declaratively define objects, data structures
+
+allow for pointers to be used:
+	on creation, objects may be:
+		strongly immutable	-- may not be modified, contains only immutable data
+		weakly immutable	-- may not be modified, may contain mutable data
+	objects become mutable iff a pointer to that object is made:
+		maintain copy-by-value semantics, so
+			var x = 6
+			var p = &x
+			var immutable = Immutable(x)
+			*p = 9
+			// x is now 9, but immutable still sees x = 6
+		is acceptable because the value x = 6 is "copied"
+			of course, if we know x is never and can never be modified, we can go ahead and pass by reference
+	mutable objects become effectively immutable once all pointers to them are destroyed or no longer used:
+		var x = 6
+		var p = &x
+		var immutable = Immutable(p)	// normally not allowed, because p is mutable
+		// immutable.doSomething()		// not valid, because *p changes
+		*p = 17							// assume *p is not used again (unless p is overwriten by assignment)
+		immutable.doSomething()			// valid, immutable sees *p = 17, and is effectively strongly immutable because it is no longer mutable at the time of its first use (method call, argument pass, or assignment)
+	MyClass* is a MyClass iff it is effectively immutable when used (in above example, p is mutable, but becomes effectively immutable before immutable is first used, so immutable can treat is as an immutable value)
+		this is intended to be used for circularly referential things
