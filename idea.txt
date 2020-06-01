@@ -1,0 +1,37 @@
+
+Assumption:
+	There are three classes of problems:
+		1) required low level -- this class is characterized by requirements of control, or limitations imposed by external forces
+			* device drivers, operating systems, etc
+			* proprietary systems (robotics, etc)
+		this class is hard to abstract, but could maybe framework architecture and then fill in manually
+		2) real time -- users actively working with self- and network-generated data
+			* MMOs
+			* live communication, streaming
+		this class may be abstracted, but needs to be made extra efficient, particularly reducing data transfers across the network where possible
+		3) data operations -- number crunching
+			* rendering
+			* crypto mining
+			* batch operations
+		this class offers the most flexibility, and can easily be abstracted
+		
+		a given application may fall within multiple classes -- an OS might be real time, low level, for example
+		speed can be given by doing lots of processing on a few (or even a single) machine, or by a little on many machines, but for many problems
+		speed doesn't matter*
+			*or rather, that application does not need the full -- or even the majority of the -- processing power available to that application,
+			freeing those resources for other tasks
+
+Execution model:
+	Actor-flavored publisher-subscriber
+		* Local actor, running code on the user's machine
+			- this is supposed to handle UI or other offline tasks
+		* "Server" actor, which is really distributed
+			- an abstraction of a centralized controller
+			- handles state of connection, as well as global state (although this in tern may be abstracted even further away internally)
+		* Worker actors, which are spun up by other actors to perform subtasks, should be relatively short-lived and/or not resource intensive
+			- these should be use to process data asynchronously, or to batch process a lot of data
+			- offload a particularly resource intensive task, if it is a relatively rare occurance
+			- simple event monitors
+		* Services, which are provided, as available, by user or external machines
+			- provide access to APIs and non-standard functionalities
+			- can allow other applications to some aspect of your application, counted as part of their application in terms of usage statistics; lower priority than the owning application, if causes bandwidth issues
